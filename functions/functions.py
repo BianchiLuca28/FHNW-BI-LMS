@@ -24,7 +24,6 @@ def calculate_sampling_strategy(y, max_threshold=2000, multiplier=10):
     return sampling_strategy
 
 
-
 def apply_smote(X, y, sampling_strategy, random_state=42):
     """
     Apply SMOTE to balance the classes in the training set.
@@ -105,3 +104,29 @@ def custom_train_test_split(
     y_test_decoded = label_encoder.inverse_transform(y_test)
 
     return X_train_scaled, X_test_scaled, y_train_resampled_decoded, y_test_decoded
+
+
+def encode_features(X, cardinality_threshold=10):
+    """
+    Encodes categorical features in the dataset:
+    - Label Encoding for high-cardinality features (more than `cardinality_threshold` unique values).
+    - One-Hot Encoding for low-cardinality features.
+
+    Parameters:
+        X (pd.DataFrame): The input DataFrame.
+        cardinality_threshold (int): The number of unique values above which a column is considered high-cardinality.
+
+    Returns:
+        pd.DataFrame: The DataFrame with encoded features.
+    """
+    # Identify categorical and numerical columns
+    categorical_cols = X.select_dtypes(include=['object']).columns
+
+    for col in categorical_cols:
+        if X[col].nunique() > cardinality_threshold:  # High cardinality
+            le = LabelEncoder()
+            X[col] = le.fit_transform(X[col].astype(str))
+        else:  # Low cardinality
+            X = pd.get_dummies(X, columns=[col], drop_first=True)
+
+    return X
